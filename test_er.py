@@ -135,17 +135,12 @@ def choise_name(choose, dis):
 
 if __name__ == "__main__":
     import argparse
-    _c = 2
-
-
     
-    _d = 80
     stop = 1000
 
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('--m', help='choose face roi, 0(haar) 1(hog) 2(dnn)', type=int, default= _c)
-    parser.add_argument('--d', help='distance detect)', type=int, default= _d)
+    parser.add_argument('--m', help='choose face roi, 0(haar) 1(hog) 2(dnn)', default= 0, type=int )
+    parser.add_argument('--d', help='distance detect)',  default= 40, type=int)
     args = parser.parse_args()
 
     choose = args.m
@@ -159,9 +154,7 @@ if __name__ == "__main__":
 
     white = (255, 255, 255)
     font = cv2.FONT_HERSHEY_SIMPLEX
-
     dist_list = []
-
 
     while True:
         frame = cap.read()[1]
