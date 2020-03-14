@@ -8,13 +8,14 @@
     show_text: show_text
     btn_detect: btn_detect
     change: change
-#    text_kv_oncv: text_kv_oncv
+
     Show_text:
         id : show_text
 
     GridLayout:
         cols: 1
         size: root.width, root.height
+#        spacing: 20
 
         ToggleButton:
             id : btn_detect
@@ -24,33 +25,32 @@
             center_x: root.width / 2
             on_press: root.detect_toggle()
 
+        BoxLayout:
+            size_hint_y: .2
+
         Change:
             id : change
             size: 640*3/4, 480*3/4
+            # max_size: 640, 480
             size_hint_y: None
+            height: 480*3/4
             center_x: root.width / 2
-
         BoxLayout:
-            size_hint_y: None
-            height: 50
-
-        Label:
-            font_size: 30
-            center_x: root.width / 2
-            size_hint_y: .2
-            text: show_text.risk_text
-
+            size_hint_y: .1
         Label:
             font_size: 25
             center_x: root.width / 2
+            size_hint_y: .1
+            text: show_text.risk_text
+
+        Label:
+            font_size: 20
+            center_x: root.width / 2
             text: show_text.distanc_text
+            size_hint_y: .2
+
 
         BoxLayout:
-            size_hint_y: None
-            height: 50
-
-        BoxLayout:
-            id: sp
             orientation: "horizontal"
             height: 50
             size_hint_y: None

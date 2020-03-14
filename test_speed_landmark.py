@@ -7,9 +7,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--face_roi', help='choose face roi, 0(hog) 1(haar) 2(dnn)', type=int, default=2)
 args = parser.parse_args()
 
-predict_landmark = dlib.shape_predictor("res/model/shape_predictor_5_face_landmarks.dat")
+predict_landmark = dlib.shape_predictor("res/model/face_landmarks.dat")
 
-video = r"C:\Users\CCS win 10 2020\Google Drive\write_medium\res\video\JonSnow.mp4"
+video = "res/video/Arwens.mp4"
 
 time_processing = lambda x: (cv2.getTickCount() - x) / cv2.getTickFrequency() * 1000
 
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     while True:
         vs = cap.read()[1]
         num_frame += 1
-        frame = cv2.resize(vs,(640, 480))
+        frame = cv2.resize(vs,(640, 360))
         gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
 
         start = cv2.getTickCount()
@@ -112,7 +112,11 @@ if __name__ == '__main__':
             color = color_value["blue"]
 
 
+        time = time_processing(start)
+        list_time.append(time)
+        time_show = f'{text_method} elapsed time: {time:.2f} ms/f'
 
+        cv2.putText(frame,time_show, (20,20), font, 0.5, color_value["white"], 1)
 
         if face:
             l = face[-1][0]
@@ -127,12 +131,6 @@ if __name__ == '__main__':
 
             for i in range(len(landmark)):
                 cv2.circle(frame, landmark[i], 2, color, -1)
-
-        time = time_processing(start)
-        list_time.append(time)
-        time_show = f'{text_method} elapsed time: {time:.2f} ms/f'
-
-        cv2.putText(frame, time_show, (20, 20), font, 0.5, color_value["white"], 1)
 
         cv2.imshow("output", frame)
         if cv2.waitKey(1) == 27 or num_frame == 500:

@@ -3,13 +3,14 @@ class Find_angle_distance:
 
 	def __init__(self):
 
-		self.__adjecent_side = 193.4 # Distance In 193.4 Cm
+		self.__adjecent_side = 31 #180 #31.5#50 #164.57 # 193.4 # Distance In 193.4 Cm
 
 		self.__horizontal_px = 320 # Px Of Hight View
 		self.__horizontal_cm = 59.8316 # Cm Of Hight View
 
 		self.__vertical_px = 240 # Px Of Width View
-		self.__vertical_cm = 46.9785 # Cm Of Width View
+		self.__vertical_cm = 21/2 #60 #21/2 #15.5 #40 # 46.9785 # Cm Of Width View
+
 		self.__px_plus = 13.33  # 240/18"
 		self.__cm_plus = 2.54  # Inch : Cm
 
@@ -76,7 +77,7 @@ class Find_angle_distance:
 
 		return self.angle_width, self.eye_width_cm, self.W
 
-	def estimate_distance(self, right_eye_x, est=2.5):
+	def estimate_distance(self, right_eye_x, est=3.5):
 		# Equation Angle Tan
 		# Compute Angle B
 		# Compute Line AD to Cm

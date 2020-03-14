@@ -1,21 +1,8 @@
-from kivy.app import App
-from kivy.uix.widget import Widget
-from kivy.core.window import Window
-from kivy.uix.image import Image
-from kivy.clock import Clock
-from kivy.graphics.texture import Texture
-from kivy.properties import ObjectProperty, StringProperty, NumericProperty
-from kivy.lang.builder import Builder
-from kivy.uix.popup import Popup
 import cv2
 import dlib
 import numpy as np
-from plyer import notification
 from find_angle_distance import Find_angle_distance
-
-
-Builder.load_file("gui/distanceKV.kv")
-Window.size = (480, 800)
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
 class Face_detect:
@@ -74,10 +61,10 @@ class Face_detect:
         return self.face_list
 
     def method_face(self, select_method):
-        if select_method == "HAAR":
+        if select_method == 0:
             self.face = self.haar(self.model_haar)
 
-        elif select_method == "HOG":
+        elif select_method == 1:
             self.face = self.hog_dlib(self.model_hog)
         else:
             self.face = self.dnn(self.model_dnn)
@@ -117,15 +104,10 @@ class Face_detect:
         w_t = box[0][0]
         h_t = box[0][1]
 
-        overlay = self.frame.copy()
-        opicity = 0.7
-
         for x,y,w,h in face:
-            cv2.rectangle(overlay,(x,y), (x+w_t+3, y+h_t+6), (0,0,0), -1 )
-            cv2.addWeighted(overlay, opicity, self.frame, 1-opicity, 0, self.frame)
-
-            cv2.putText(self.frame,t_inpurt,(x+3,y+h_t+3),font, s_text, (0,0,255), 1)
             cv2.rectangle(self.frame, (x,y), (w,h), (0,0,0), 1)
+            cv2.rectangle(self.frame,(x,y-8), (x+w_t, ((y-12)-h_t)), (255,255,255), -1 )
+            cv2.putText(self.frame,t_inpurt,(x,y-10),font, s_text, (0,0,255), 1)
 
     def draw_landmark(self, eye):
         cv2.circle(self.frame,(eye[0],eye[1]), 2, (0,0,0), -1)
@@ -138,116 +120,85 @@ class Face_detect:
         distance = self.find_distance.estimate_distance(eye_right[0])
         return {"distance": distance, "angle": [angle_v, status_v[0]]}
 
+time_processing = lambda x: (cv2.getTickCount() - x) / cv2.getTickFrequency() * 1000
 
-class Change(Image):
-    def output_frame(self, im):
-        self.cols = im.shape[0]
-        self.rows = im.shape[1]
-        self.buf1 = cv2.flip(im, 0)
-        self.buf = self.buf1.tostring()
-        image_texture = Texture.create(size=(self.rows, self.cols), colorfmt='bgr')
-        image_texture.blit_buffer(self.buf, colorfmt='bgr', bufferfmt='ubyte')
-        self.texture = image_texture
-
-
-class Show_text(Widget):
-    number_frame = NumericProperty(0)
-    distanc_text = StringProperty("")
-    risk_text = StringProperty("")
+def choise_name(choose, dis):
+    name = ""
+    if choose == 0:
+        name = "HAAR"
+    elif choose == 1:
+        name = "HOG"
+    else:
+        name = "DNN"
+    return f"{name}_{dis}"
 
 
-class Main(Widget):
-    show_text = ObjectProperty(None)
-    btn_detect = ObjectProperty(None)
-    change = ObjectProperty(None)
+if __name__ == "__main__":
+    import argparse
+    _c = 2
 
-    def __init__(self, capture, **kwargs):
-        super(Main, self).__init__(**kwargs)
-        self.capture = capture
-        self.output = self.change
-        self.face_detect = Face_detect()
-        self.choose = "HAAR"
-        self.risk_status_text = ""
-        self.frame_num = 0
 
-    def detect_toggle(self):
-        click = self.btn_detect.state == "down"
-        if click:
-            self.btn_detect.text = "Detecting Blink..."
-            self.x = 1
-        else:
-            self.btn_detect.text = "Start Detect"
-            self.x = 0
-            self.show_text.distanc_text = ""
-
-    def choose_clicked(self, value): # choose method
-        self.choose = value
     
-    def risk_status(self, x):
-        r = ""
-        if x < 40:
-            r = 0
-        elif x < 76:
-            r = 1
-        else:
-            r = 2
-        return r
-
-    def risk_show(self, x):
-        if x == 0:
-            self.risk_status_text = "You are too close to the screen!"
-        elif x == 1:
-            self.risk_status_text = "Good! View"
-        else:
-            self.risk_status_text = "You are too far from the screen"
-
-        self.show_text.risk_text = self.risk_status_text
-
-    def noti(self, status, distance):
-        if self.frame_num % 60 == 0:
-            if status == 0 or status == 2:
-                notification.notify(
-                    title= "Risk !",
-                    message=f"You have distance {round(distance)} cm",
-                    app_icon="gui/ico/logo_eyeguard.ico",
-                    timeout=2)
-
-    def working(self, start, choose, frame):
-        self.face_detect.get_frame(frame)
-
-        if start == 1:
-            self.frame_num += 1
-
-            face = self.face_detect.method_face(choose)
-            eyes = self.face_detect.face_landmark(face)
-
-            if eyes:
-                self.face_detect.draw_landmark(eyes["view_center"])
-                self.distance = self.face_detect.distance(eyes["view_center"], eyes["eye_right"])
-                self.show_text.distanc_text = f"{self.distance['distance']:.2f} cm"
-
-                risk_status = self.risk_status(self.distance['distance'])
-                self.risk_show(risk_status)
-
-                self.noti(risk_status, self.distance['distance'])
-                self.face_detect.draw_face(face, self.distance['distance'])
-        else:
-            self.frame_num = 0
-            self.show_text.risk_text = ""
-
-    def update(self, dt):
-        frame = self.capture.read()[1]  # <<< start frame app
-        self.working(self.x, self.choose, frame)
-        self.output.output_frame(frame)
+    _d = 80
+    stop = 1000
 
 
-class DistanceApp(App):
-    def build(self):
-        capture = cv2.VideoCapture(0)
-        app = Main(capture)
-        Clock.schedule_interval(app.update, 1 / 30)
-        return app
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--m', help='choose face roi, 0(haar) 1(hog) 2(dnn)', type=int, default= _c)
+    parser.add_argument('--d', help='distance detect)', type=int, default= _d)
+    args = parser.parse_args()
+
+    choose = args.m
+    d = args.d
+    name = choise_name(choose, d)
+
+    cap = cv2.VideoCapture(0)
+    face_detect = Face_detect()
+    frame_num = 0
+    speed_list = []
+
+    white = (255, 255, 255)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+
+    dist_list = []
 
 
-if __name__ == '__main__':
-    DistanceApp().run()
+    while True:
+        frame = cap.read()[1]
+
+        start = cv2.getTickCount()
+
+        face_detect.get_frame(frame)
+        face = face_detect.method_face(choose)
+        eyes = face_detect.face_landmark(face)
+
+        if eyes:
+            frame_num += 1
+
+            face_detect.draw_landmark(eyes["view_center"])
+            dist = face_detect.distance(eyes["view_center"], eyes["eye_right"])['distance']
+            face_detect.draw_face(face, dist)
+
+            dist_list.append(dist)
+
+            speed = time_processing(start)
+            speed_list.append(speed)
+
+        cv2.putText(frame, f"{name} | Speed: {speed:.2f} ",(20,30), font, 0.6, white, 1)
+        cv2.putText(frame, f"Frame: {frame_num} ",(20,60), font, 0.6, white, 1)
+
+        cv2.imshow("out", frame)
+        if cv2.waitKey(1) == 27 or frame_num == stop:
+            break
+    
+    cv2.destroyAllWindows()
+    cap.release()
+
+    # np.savetxt(f"csv/new_test/{name}.csv", dist_list)
+
+    # y_true = np.zeros(stop) + d
+
+    # print("\n")
+    # print(f"MSE: {mean_squared_error(y_true, dist_list, squared= False)}")
+    # print(f"RMSE: {mean_squared_error(y_true, dist_list)}")
+    print(f"SPEED:{np.array(speed_list).mean():.2f}")

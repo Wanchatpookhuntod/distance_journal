@@ -1,0 +1,40 @@
+<Main>:
+    # size: 100, 100
+
+    
+
+
+
+    BoxLayout:
+        id: layout1
+        orientation: "vertical"
+        center_x: root.width / 2
+        size_hint: None, None
+        size: 200,50
+        top: root.top
+        Button:
+            text: "Hello World 1"
+    
+    BoxLayout:
+        id: layout2
+        orientation: "vertical"
+        center_x: root.width / 2
+        center_y: root.height / 2
+        
+        size_hint: None, None
+        size: 200,50
+        top: layout1.y - 100
+        Button:
+            text: "Hello World 2"
+
+    GridLayout:
+        y: root.y
+        cols: 1
+        size_hint: None, None
+        size: 200,100
+        center_x: root.width/2
+        Button:
+            text: "in grid1"
+        Button:
+            text: "in grid2"
+
